@@ -19,7 +19,7 @@ hash_memory = min(65536, total_kilobytes_ram // 10)
 
 #The settings used here are for the sake of speed and ease of testing. Safer settings commented next to each one.
 ph = PasswordHasher(
-    time_cost=2,                #time_cost is the easiest setting to increase to improve security but also lower performance
+    time_cost=2,                #time_cost is the easiest setting to increase to improve security but also lowers performance
     memory_cost=hash_memory,    #Total amount of RAM used should be between 64 and 512 megabytes
     parallelism=used_cores,     #Only a maximum of 2 cores are used, Most devices today have at least 4.
     hash_len=32,
