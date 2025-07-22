@@ -25,8 +25,19 @@ def create_tables():
     """)
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            id BIGSERIAL PRIMARY KEY,
+            username VARCHAR(100) UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS customers (
             id BIGSERIAL PRIMARY KEY,
+            account_id BIGINT UNIQUE NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
             first_name VARCHAR(100) NOT NULL,
             last_name VARCHAR(100) NOT NULL,
             email VARCHAR(100) UNIQUE NOT NULL

@@ -16,16 +16,22 @@ def create_author(first_name, last_name) -> bool:
         return False
 
 def read_all_authors():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT * FROM authors")
-            return cur.fetchall()
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM authors")
+                return cur.fetchall()
+    except Exception as e:
+        print(f"Error reading all authors: {e}")
 
 def read_author_id(author_id):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id, first_name, last_name FROM authors WHERE id = %s", (author_id,))
-            return cur.fetchone()
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id, first_name, last_name FROM authors WHERE id = %s", (author_id,))
+                return cur.fetchone()
+    except Exception as e:
+        print(f"Error reading author by id: {e}")
 
 def update_author(id, first_name, last_name) -> bool:
     try:
