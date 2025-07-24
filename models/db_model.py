@@ -5,7 +5,6 @@ def create_tables():
     conn = get_connection()
     cur = conn.cursor()
 
-    #Authors table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS authors (
             id BIGSERIAL PRIMARY KEY,
@@ -19,6 +18,7 @@ def create_tables():
             id BIGSERIAL PRIMARY KEY,
             title VARCHAR(255),
             author_id INTEGER REFERENCES authors(id),
+            genre VARCHAR(100),
             price NUMERIC(18, 4),
             stock INTEGER DEFAULT 0
         );
