@@ -1,7 +1,6 @@
 from services import author_service
 from services.author_service import delete_author
 
-
 def show_menu():
     print("Author Management")
     print("1. Create Author")

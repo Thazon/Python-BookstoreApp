@@ -1,6 +1,5 @@
 from db.connection import get_connection
 
-
 def create_author(first_name, last_name) -> bool:
     try:
         with get_connection() as conn:

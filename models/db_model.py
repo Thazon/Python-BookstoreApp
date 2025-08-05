@@ -14,13 +14,64 @@ def create_tables():
     """)
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS author_details (
+            author_id BIGINT PRIMARY KEY REFERENCES authors(id) ON DELETE CASCADE,
+            photo_url TEXT,
+            overview TEXT,
+            hometown VARCHAR(100),
+            birthday DATE,
+            website TEXT
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS author_education (
+            id SERIAL PRIMARY KEY,
+            author_id BIGINT REFERENCES authors(id) ON DELETE CASCADE,
+            degree VARCHAR(100),
+            institution VARCHAR(100),
+            graduation_year SMALLINT
+        );
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS books (
             id BIGSERIAL PRIMARY KEY,
+            cover_image_url TEXT,
             title VARCHAR(255),
-            author_id INTEGER REFERENCES authors(id),
-            genre VARCHAR(100),
+            author_id BIGINT REFERENCES authors(id),
+            publisher VARCHAR(100),
+            ISBN VARCHAR(13),
             price NUMERIC(18, 4),
+            book_format VARCHAR(50),
             stock INTEGER DEFAULT 0
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS book_details (
+            book_id BIGINT PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+            overview TEXT,
+            publication_date DATE,
+            page_count INTEGER,
+            length_cm NUMERIC(5,2),
+            width_cm NUMERIC(5,2),
+            height_cm NUMERIC(5,2)
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS genres (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100)
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS book_genres (
+            book_id INT REFERENCES books(id) ON DELETE CASCADE,
+            genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
+            PRIMARY KEY (book_id, genre_id)
         );
     """)
 
@@ -55,8 +106,8 @@ def create_tables():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS order_items (
             id BIGSERIAL PRIMARY KEY,
-            order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
-            book_id INTEGER REFERENCES books(id),
+            order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
+            book_id BIGINT REFERENCES books(id),
             quantity INTEGER NOT NULL,
             unit_price NUMERIC(18, 4) NOT NULL
         );
