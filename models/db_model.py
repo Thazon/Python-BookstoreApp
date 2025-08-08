@@ -118,7 +118,7 @@ def create_tables():
         id SERIAL PRIMARY KEY,
         currency_from VARCHAR(3) NOT NULL,
         currency_to VARCHAR(3) NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        rate NUMERIC(18,6) NOT NULL,
         UNIQUE(currency_from, currency_to)
         );
     """)

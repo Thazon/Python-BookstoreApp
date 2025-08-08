@@ -10,3 +10,5 @@ DB_SETTINGS = {
     "host": os.getenv("DB_HOST", "localhost"),
     "port": os.getenv("DB_PORT", 5432)
 }
+
+EXCHANGE_API_URL = os.getenv("EXCHANGE_API_URL")
