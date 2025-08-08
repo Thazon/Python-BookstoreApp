@@ -113,6 +113,43 @@ def create_tables():
         );
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS exchange_rates (
+        id SERIAL PRIMARY KEY,
+        currency_from VARCHAR(3) NOT NULL,
+        currency_to VARCHAR(3) NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(currency_from, currency_to)
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS discounts (
+            id BIGSERIAL PRIMARY KEY,
+            name VARCHAR(200) NOT NULL,
+            discount_type VARCHAR(10) CHECK (discount_type IN ('fixed', 'percent')),
+            value NUMERIC(18,4) NOT NULL,
+            start_date DATE,
+            end_date DATE
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS book_discounts (
+            book_id BIGINT REFERENCES books(id) ON DELETE CASCADE,
+            discount_id BIGINT REFERENCES discounts(id) ON DELETE CASCADE,
+            PRIMARY KEY (book_id, discount_id)
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS genre_discounts (
+            genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
+            discount_id BIGINT REFERENCES discounts(id) ON DELETE CASCADE,
+            PRIMARY KEY (genre_id, discount_id)
+        );
+    """)
+
     conn.commit()
     cur.close()
     conn.close()
