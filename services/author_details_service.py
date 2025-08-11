@@ -7,7 +7,7 @@ def create_author_details(author_id, photo_url=None, overview=None, hometown=Non
             with conn.cursor() as cur:
                 cur.execute("""
                     INSERT INTO author_details (author_id, photo_url, overview, hometown, birthday, website)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s);
                 """, (author_id, photo_url, overview, hometown, birthday, website))
             conn.commit()
         return True
@@ -22,7 +22,7 @@ def read_author_details(author_id):
                 cur.execute("""
                     SELECT author_id, photo_url, overview, hometown, birthday, website
                     FROM author_details
-                    WHERE author_id = %s
+                    WHERE author_id = %s;
                 """, (author_id,))
                 row = cur.fetchone()
                 if row:
@@ -49,7 +49,7 @@ def update_author_details(author_id, photo_url=None, overview=None, hometown=Non
                 cur.execute("""
                     SELECT photo_url, overview, hometown, birthday, website
                     FROM author_details
-                    WHERE author_id = %s
+                    WHERE author_id = %s;
                 """, (author_id,))
                 details = cur.fetchone()
                 if not details:
@@ -69,7 +69,7 @@ def update_author_details(author_id, photo_url=None, overview=None, hometown=Non
                         hometown = %s,
                         birthday = %s,
                         website = %s,
-                    WHERE author_id = %s
+                    WHERE author_id = %s;
                 """, (photo_url, overview, hometown, birthday, website, author_id))
             conn.commit()
         return True
@@ -84,7 +84,7 @@ def delete_author_details(author_id) -> bool:
                 cur.execute("""
                     DELETE
                     FROM author_details
-                    WHERE author_id = %s
+                    WHERE author_id = %s;
                 """, (author_id,))
                 if cur.rowcount == 0:
                     print(f"No details found for author ID {author_id}")
