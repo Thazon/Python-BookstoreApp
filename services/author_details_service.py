@@ -7,7 +7,7 @@ def create_author_details(author_id, photo_url=None, overview=None, hometown=Non
             with conn.cursor() as cur:
                 cur.execute("""
                     INSERT INTO author_details (author_id, photo_url, overview, hometown, birthday, website)
-                    VALUES (%s, %s, %s, %s, %s, %s);
+                    VALUES (%s, %s, %s, %s, %s, %s);3
                 """, (author_id, photo_url, overview, hometown, birthday, website))
             conn.commit()
         return True
@@ -34,7 +34,6 @@ def read_author_details(author_id):
                         "birthday": row[4],
                         "website": row[5]
                     }
-                return row
     except Exception as e:
         print(f"Error reading author details: {e}")
         return None
