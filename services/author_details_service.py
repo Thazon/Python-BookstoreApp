@@ -1,6 +1,5 @@
 from db.connection import get_connection
 
-
 def create_author_details(author_id, photo_url=None, overview=None, hometown=None, birthday=None, website=None) -> bool:
     try:
         with get_connection() as conn:
