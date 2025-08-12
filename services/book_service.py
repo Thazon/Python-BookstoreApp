@@ -87,7 +87,7 @@ def update_book(book_id, cover_image_url, title, author_id, publisher, isbn, pri
                         book_format = %s,
                         stock = %s
                     WHERE book_id = %s;
-                """, (cover_image_url, title, author_id, publisher, isbn, price, book_format, stock))
+                """, (cover_image_url, title, author_id, publisher, isbn, price, book_format, stock, book_id))
             conn.commit()
             return True
     except Exception as e:

@@ -7,7 +7,7 @@ def create_author_details(author_id, photo_url=None, overview=None, hometown=Non
             with conn.cursor() as cur:
                 cur.execute("""
                     INSERT INTO author_details (author_id, photo_url, overview, hometown, birthday, website)
-                    VALUES (%s, %s, %s, %s, %s, %s);3
+                    VALUES (%s, %s, %s, %s, %s, %s);
                 """, (author_id, photo_url, overview, hometown, birthday, website))
             conn.commit()
         return True
