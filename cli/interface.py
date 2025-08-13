@@ -47,7 +47,7 @@ def update_author():
         new_first_name = input("New first name: ")
         new_last_name = input("New last name: ")
 
-        success = author_service.update_author(id, new_first_name, new_last_name)
+        success = author_service.update_author(new_first_name, new_last_name, id)
         if success:
             print("Author updated successfully")
     except ValueError:

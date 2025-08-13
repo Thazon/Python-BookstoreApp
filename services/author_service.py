@@ -1,77 +1,40 @@
-from db.connection import get_connection
+from services.crud_service import crud
+
+name = "authors"
+
+create = """INSERT INTO authors (first_name, last_name)
+            VALUES (%s, %s);"""
+
+read_all = """SELECT id, first_name, last_name
+            FROM authors;"""
+
+read_one = """SELECT id, first_name, last_name
+            FROM authors
+            WHERE id = %s;"""
+
+update_select = """SELECT first_name, last_name
+                FROM authors
+                WHERE id = %s;"""
+
+update = """UPDATE authors
+            SET first_name = %s, last_name = %s
+            WHERE id = %s;"""
+
+delete = """DELETE
+            FROM authors
+            WHERE id = %s;"""
 
 def create_author(first_name, last_name) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO authors (first_name, last_name)
-                    VALUES (%s, %s)
-                """, (first_name, last_name))
-            conn.commit()
-        return True
-    except Exception as e:
-        print(f"Error creating author: {e}")
-        return False
+    return crud("create", create, name, (first_name, last_name))
 
 def read_all_authors():
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT * FROM authors")
-                return cur.fetchall()
-    except Exception as e:
-        print(f"Error reading all authors: {e}")
+    return crud("read_all", read_all, name)
 
-def read_author_id(author_id):
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT id, first_name, last_name FROM authors WHERE id = %s", (author_id,))
-                return cur.fetchone()
-    except Exception as e:
-        print(f"Error reading author by id: {e}")
+def read_author(author_id):
+    return crud("read_one", read_one, name, (author_id,))
 
-def update_author(id, first_name, last_name) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT first_name, last_name FROM authors WHERE id = %s", (id,))
-                author = cur.fetchone()
+def update_author(first_name, last_name, author_id) -> bool:
+    return crud("update", update, name, (first_name, last_name, author_id), update_select)
 
-                if not author:
-                    print(f"No author found with ID = {id}.")
-                    return False
-
-                current_first_name, current_last_name = author
-
-                final_first_name = first_name.strip() or current_first_name
-                final_last_name = last_name.strip() or current_last_name
-
-                cur.execute("""
-                    UPDATE authors
-                    SET first_name = %s, last_name = %s
-                    WHERE id = %s
-                """, (final_first_name, final_last_name, id))
-            conn.commit()
-        return True
-    except Exception as e:
-        print(f"Error updating author: {e}")
-        return False
-
-
-def delete_author(id) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT id FROM authors WHERE id = %s", (id,))
-                if cur.fetchone() is None:
-                    print(f"No author found with ID {id}.")
-                    return False
-
-                cur.execute("DELETE FROM authors WHERE id = %s", (id,))
-            conn.commit()
-            return True
-    except Exception as e:
-        print(f"Error deleting author: {e}")
-        return False
+def delete_author(author_id) -> bool:
+    return crud("delete", delete, name, (author_id,))
