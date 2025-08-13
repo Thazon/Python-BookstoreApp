@@ -42,12 +42,12 @@ def view_author_by_id():
 
 def update_author():
     try:
-        id = int(input("Enter author ID to be updated: "))
+        author_id = int(input("Enter author ID to be updated: "))
         print("Leave blank to keep current values.")
         new_first_name = input("New first name: ")
         new_last_name = input("New last name: ")
 
-        success = author_service.update_author(new_first_name, new_last_name, id)
+        success = author_service.update_author(author_id, new_first_name, new_last_name)
         if success:
             print("Author updated successfully")
     except ValueError:

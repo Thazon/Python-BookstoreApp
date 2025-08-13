@@ -71,7 +71,7 @@ class AuthorWindow:
             author_id = self.tree.item(selected[0], "values")[0]
             new_first = self.first_name_entry.get()
             new_last = self.last_name_entry.get()
-            if update_author(new_first, new_last, int(author_id)):
+            if update_author(int(author_id), new_first, new_last):
                 messagebox.showinfo("Success", "Author updated.")
                 self.populate_authors()
             else:

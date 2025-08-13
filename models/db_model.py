@@ -119,7 +119,8 @@ def create_tables():
         currency_from VARCHAR(3) NOT NULL,
         currency_to VARCHAR(3) NOT NULL,
         rate NUMERIC(18,6) NOT NULL,
-        UNIQUE(currency_from, currency_to)
+        UNIQUE(currency_from, currency_to),
+        last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     """)
 

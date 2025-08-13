@@ -2,19 +2,27 @@ import json
 import requests
 from datetime import datetime, timezone
 from config.settings import EXCHANGE_API_URL
-from db.connection import get_connection
+from services.crud_service import crud
 
 LOCAL_JSON = "resources/RON.json"
+name = "exchange_rates"
 
-def check_exchange_update(local_file=LOCAL_JSON):
+read_one ="""SELECT MIN(last_updated)
+                FROM exchange_rates;"""
+
+create = """INSERT INTO exchange_rates (currency_from, currency_to, rate, last_updated)
+            VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (currency_from, currency_to)
+            DO UPDATE SET rate = EXCLUDED.rate, last_updated = CURRENT_TIMESTAMP;"""
+
+#Checks if current time is after the timestamp for the next update from the json file. If so, returns True.
+def check_exchange_update(next_update):
     try:
-        with open(local_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        next_update = data.get("time_next_update_unix", 0)
         return datetime.now(timezone.utc).timestamp() >= next_update
     except Exception:
-        return True
+        return True     #Update exchange rates on exception for safety.
 
+#Checks for the API URL and, afterward, for the corrects status code. If everything is correct, writes over LOCAL_JSON.
 def fetch_exchange_rates():
     if not EXCHANGE_API_URL:
         raise ValueError("Exchange API URL not configured!")
@@ -26,33 +34,55 @@ def fetch_exchange_rates():
         json.dump(data, f, indent=4)
     return data
 
+#Update exchange rates if needed
 def update_exchange_rates():
-    data = None
-    if check_exchange_update():
+
+    #Fetch last update timestamp from DB
+    db_last_update = crud("read_one", read_one, name)
+    db_last_update = db_last_update[0] if db_last_update and db_last_update[0] else None
+
+    #Load local JSON
+    with open(LOCAL_JSON, "r", encoding="utf-8") as f:
+        local_data = json.load(f)
+
+    #Determine last updated time according to JSON
+    last_update_unix = local_data.get("time_last_update_unix", 0)
+    last_update_time = datetime.fromtimestamp(last_update_unix, timezone.utc)
+
+    #Determine next update time
+    next_update_unix = local_data.get("time_next_update_unix", 0)
+    next_update_time = datetime.fromtimestamp(next_update_unix, timezone.utc)
+
+    print(f"{db_last_update} {next_update_time}")
+
+    #Skip update if not needed
+    if db_last_update and next_update_time > db_last_update >= last_update_time:
+        print(f"Exchange rates are already up-to-date. Last update {db_last_update}.")
+        return False
+
+    #Determine whether update necessary from local JSON or from the API.
+    if check_exchange_update(next_update_unix):
         print("Fetching fresh exchange rates...")
         data = fetch_exchange_rates()
     else:
-        print("Using local exchange rates...")
-        with open(LOCAL_JSON, "r", encoding="utf-8") as f:
-            data=json.load(f)
-    if data is None or data["result"] != "success":
+        print("Updating using local data.")
+        data = local_data
+
+    if not data or data.get("result") != "success":
         raise ValueError("Invalid exchange data!")
 
+    #Base currency and conversion rates are memorized in data, last update timestamp as well.
     base = data["base_code"]
     rates = data["conversion_rates"]
     timestamp = datetime.fromtimestamp(data["time_last_update_unix"], timezone.utc)
 
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            for currency_to, rate in rates.items():
-                if currency_to == base:
-                    continue
-                cur.execute("""
-                    INSERT INTO exchange_rates (currency_from, currency_to, rate)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (currency_from, currency_to)
-                    DO UPDATE SET rate = EXCLUDED.rate;
-                """, (base, currency_to, rate))
-        conn.commit()
+    #Updates the rows and reports back how many it's updated.
+    update_count = 0
+    for currency_to, rate in rates.items():
+        if currency_to == base:
+            continue
+        crud("create", create, name, (base, currency_to, rate))
+        update_count += 1
 
-    print(f"Exchange rates updated successfully from {base} at {timestamp}.")
+    print(f"{update_count} exchange rates updated successfully from {base} at {timestamp}.")
+    return True

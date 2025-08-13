@@ -1,123 +1,84 @@
-import psycopg2
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-from db.connection import get_connection
+from services.crud_service import crud
 
 ph = PasswordHasher()
+
+name = "accounts"
+name_customers = "customers"
+
+create = """INSERT INTO accounts (username, password)
+            VALUES (%s, %s)
+            RETURNING id;"""
+
+create_customer = """INSERT INTO customers (account_id, first_name, last_name, email)
+                        VALUES (%s, %s, %s, %s);"""
+
+read_one_username ="""SELECT 1
+                        FROM accounts
+                        WHERE username = %s;"""
+
+read_one_account_username = """SELECT a.id, a.username, c.first_name, c.last_name, c.email
+                        FROM accounts a
+                        JOIN customers c ON a.id = c.account_id
+                        WHERE a.username = %s;"""
+
+read_all = """SELECT a.id, a.username, c.first_name, c.last_name, c.email
+                FROM accounts a
+                JOIN customers c ON a.id = c.account_id;"""
+
+read_password = """SELECT password
+                    FROM accounts
+                    WHERE username = %s;"""
+
+update = """UPDATE accounts
+            SET is_active = %s
+            WHERE id = %s;"""
+
+delete = """DELETE
+            FROM accounts
+            WHERE id = %s;"""
+
+
 
 def create_account(username, password, first_name, last_name, email) -> bool:
     while is_username_taken(username):
         print("Username already exists. Pick a different username.")
         username = input("New username: ")
-    try:
-        hashed_password = ph.hash(password)
 
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO accounts (username, password)
-                    VALUES(%s, %s)
-                    RETURNING id
-                """, (username, hashed_password))
+    hashed_password = ph.hash(password)
+    account_id = crud("read_one", create, name, (username, hashed_password))
 
-                account_id = cur.fetchone()[0]
+    if not account_id:
+        return False
+    account_id = account_id[0]
 
-                cur.execute("""
-                    INSERT INTO customers (account_id, first_name, last_name, email)
-                    VALUES (%s, %s, %s, %s)
-                """, (account_id, first_name, last_name, email))
-                conn.commit()
-                return True
-    except psycopg2.IntegrityError as e:
-        print(f"Integrity error: {e}")
-    except Exception as e:
-        print(f"Error creating account: {e}")
+    return crud("create", create_customer, name_customers, (account_id, first_name, last_name, email))
 
 def is_username_taken(username) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM accounts WHERE username = %s", (username,))
-                return cur.fetchone() is not None
-    except Exception as e:
-        print(f"Error checking username: {e}")
-        return True #If an error occurs, it's better to assume the username is taken than to potentially allow a
-                    #duplicate username.
-
-def update_active_account(id: int, state: bool) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    UPDATE accounts
-                    SET is_active = %s
-                    WHERE id = %s
-                """, (state, id))
-
-                if cur.rowcount == 0:
-                    print(f"No account found with ID {id}")
-                    return False
-                conn.commit()
-                return True
-    except Exception as e:
-        print(f"Error updating account status: {e}")
-        return False
+    return crud("read_one", read_one_username, "username_check", (username,)) is not None
 
 def read_account_by_username(username):
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT a.id, a.username, c.first_name, c.last_name, c.email
-                    FROM accounts a
-                    JOIN customers c ON a.id = c.account_id
-                    WHERE a.username = %s
-                """, (username,))
-                return cur.fetchone()
-    except Exception as e:
-        print(f"Error reading account: {e}")
-    return None
+    return crud("read_one", read_one_account_username, name, (username,))
 
 def read_all_accounts():
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT a.id, a.username, c.first_name, c.last_name, c.email
-                    FROM accounts a
-                    JOIN customers c ON a.id = c.account_id
-                """)
-                return cur.fetchall()
-    except Exception as e:
-        print(f"Error reading all accounts: {e}")
+    return crud("read_all", read_all, name)
+
+def update_active_account(account_id, state) -> bool:
+    return crud("update", update, name, (state, account_id))
 
 def delete_account(account_id) -> bool:
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    DELETE FROM accounts WHERE id = %s
-                """, (account_id,))
-                conn.commit()
-                return True
-    except Exception as e:
-        print(f"Error deleting account: {e}")
-        return False
+    return crud("delete", delete, name, (account_id,))
 
 def verify_login(username, password) -> bool:
+    result = crud("read_one", read_password, name, (username,))
+    if not result:
+        return False
+    stored_password = result[0]
     try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT password FROM accounts WHERE username = %s
-                """, (username,))
-                result = cur.fetchone()
-                if result is None:
-                    return False
-                stored_password = result[0]
-                ph.verify(stored_password, password)
-                return True
+        ph.verify(stored_password, password)
+        return True
     except VerifyMismatchError:
         return False
     except Exception as e:
