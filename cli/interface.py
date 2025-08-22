@@ -1,5 +1,5 @@
-from services import author_service
-from services.author_service import delete_author
+from services.crud import author_service
+from services.crud.author_service import delete_author
 
 def show_menu():
     print("Author Management")

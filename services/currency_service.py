@@ -2,18 +2,9 @@ import json
 import requests
 from datetime import datetime, timezone
 from config.settings import EXCHANGE_API_URL
-from services.crud_service import crud
+from services.crud.exchange_rate_service import read_last_updated_exchange_rate, create_exchange_rate
 
 LOCAL_JSON = "resources/RON.json"
-name = "exchange_rates"
-
-read_one ="""SELECT MIN(last_updated)
-                FROM exchange_rates;"""
-
-create = """INSERT INTO exchange_rates (currency_from, currency_to, rate, last_updated)
-            VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
-            ON CONFLICT (currency_from, currency_to)
-            DO UPDATE SET rate = EXCLUDED.rate, last_updated = CURRENT_TIMESTAMP;"""
 
 #Checks if current time is after the timestamp for the next update from the json file. If so, returns True.
 def check_exchange_update(next_update):
@@ -38,7 +29,7 @@ def fetch_exchange_rates():
 def update_exchange_rates():
 
     #Fetch last update timestamp from DB
-    db_last_update = crud("read_one", read_one, name)
+    db_last_update = read_last_updated_exchange_rate()
     db_last_update = db_last_update[0] if db_last_update and db_last_update[0] else None
 
     #Load local JSON
@@ -81,7 +72,7 @@ def update_exchange_rates():
     for currency_to, rate in rates.items():
         if currency_to == base:
             continue
-        crud("create", create, name, (base, currency_to, rate))
+        create_exchange_rate(base, currency_to, rate)
         update_count += 1
 
     print(f"{update_count} exchange rates updated successfully from {base} at {timestamp}.")

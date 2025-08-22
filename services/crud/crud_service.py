@@ -1,9 +1,11 @@
+from idna.intranges import intranges_from_list
+
 from db.connection import get_connection
 
 #This function is used to manage the CRUD functionality of the program.
 def crud(instruction_type, sql, name, parameters=None, update_select=None):
     #It has only a couple defined allowed types. If the type doesn't match, it immediately returns False.
-    allowed_types = {"create", "read_one", "read_all", "update", "delete", "bulk"}
+    allowed_types = {"create", "create_return", "read_one", "read_all", "update", "delete", "bulk"}
     if instruction_type not in allowed_types:
         print(f"Invalid CRUD type: {instruction_type}!")
         return False
@@ -58,6 +60,12 @@ def crud(instruction_type, sql, name, parameters=None, update_select=None):
                         print(f"Row successfully inserted in {name}!")
                     return True
 
+                elif instruction_type == "create_return":
+                    new_id = cur.fetchone()[0]
+                    conn.commit()
+                    print(f"Row successfully inserted in {name} with id {new_id}!")
+                    return new_id
+
                 #If CRUD type is read_one, it returns the one row read or None if nothing was found.
                 elif instruction_type == "read_one":
                     return cur.fetchone()
@@ -85,6 +93,6 @@ def crud(instruction_type, sql, name, parameters=None, update_select=None):
         print(f"Error during {instruction_type} on {name}: {e}!")
         if name == "username_check":
             return True #If username check fails, return True as if a username was found.
-        if "read" in instruction_type:
+        if "read" in instruction_type or instruction_type == "create_return":
             return None
         return False

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from services.author_service import (
+from services.crud.author_service import (
     create_author, read_all_authors, update_author, delete_author
 )
 

@@ -1,5 +1,4 @@
-from db.connection import get_connection
-from services.crud_service import crud
+from services.crud.crud_service import crud
 
 name = "book_details"
 

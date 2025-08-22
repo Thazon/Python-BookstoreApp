@@ -1,4 +1,4 @@
-from services.crud_service import crud
+from services.crud.crud_service import crud
 
 name = "books"
 
@@ -8,6 +8,8 @@ create = """INSERT INTO books (cover_image_url, title, author_id, publisher, isb
 read_one = """SELECT cover_image_url, title, author_id, publisher, isbn, price, book_format, stock
                 FROM books
                 WHERE id = %s;"""
+
+read_book_price = """SELECT price, id, author_id FROM books WHERE id = %s;"""
 
 read_all = """SELECT id, cover_image_url, title, author_id, publisher, isbn, price, book_format, stock
                 FROM books;"""
@@ -37,6 +39,9 @@ def create_book(cover_image_url, title, author_id, publisher, isbn, price, book_
 
 def read_book(book_id):
     return crud("read_one", read_one, name, (book_id,))
+
+def read_price_book(book_id):
+    return crud("read_one", read_book_price, name, (book_id,))
 
 def read_all_books():
     return crud("read_all", read_all, name)

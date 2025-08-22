@@ -1,7 +1,8 @@
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-from services.crud_service import crud
+from services.crud.crud_service import crud
+from services.crud.customer_service import create_customer
 
 ph = PasswordHasher()
 
@@ -11,9 +12,6 @@ name_customers = "customers"
 create = """INSERT INTO accounts (username, password)
             VALUES (%s, %s)
             RETURNING id;"""
-
-create_customer = """INSERT INTO customers (account_id, first_name, last_name, email)
-                        VALUES (%s, %s, %s, %s);"""
 
 read_one_username ="""SELECT 1
                         FROM accounts
@@ -48,13 +46,13 @@ def create_account(username, password, first_name, last_name, email) -> bool:
         username = input("New username: ")
 
     hashed_password = ph.hash(password)
-    account_id = crud("read_one", create, name, (username, hashed_password))
+    account_id = crud("create_return", create, name, (username, hashed_password))
 
     if not account_id:
         return False
     account_id = account_id[0]
 
-    return crud("create", create_customer, name_customers, (account_id, first_name, last_name, email))
+    return create_customer(account_id, first_name, last_name, email)
 
 def is_username_taken(username) -> bool:
     return crud("read_one", read_one_username, "username_check", (username,)) is not None

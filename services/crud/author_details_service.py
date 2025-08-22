@@ -1,4 +1,4 @@
-from services.crud_service import crud
+from services.crud.crud_service import crud
 
 name = "author_details"
 
